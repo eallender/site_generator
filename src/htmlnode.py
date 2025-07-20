@@ -31,7 +31,7 @@ class HTMLNode:
 
 
 class LeafNode(HTMLNode):
-    def __init__(self, tag, value, props=None):
+    def __init__(self, tag: str, value: str, props:dict=None):
         super().__init__(tag, value, None, props)
 
     def to_html(self):
@@ -45,7 +45,7 @@ class LeafNode(HTMLNode):
 
 
 class ParentNode(HTMLNode):
-    def __init__(self, tag, children, props=None):
+    def __init__(self, tag: str, children: list, props: dict=None):
         super().__init__(tag, None, children, props)
 
     def to_html(self):
@@ -55,13 +55,13 @@ class ParentNode(HTMLNode):
         if not self.children:
             return ValueError("ParentNode missing children")
 
-        result = ""
+        results = ""
         for child in self.children:
             result = child.to_html()
             if not isinstance(
                 result, ValueError
-            ):  # TODO: Fix handling of value errors from children
-                result += child.to_html()
+            ):
+                results += result
             else:
                 return ValueError(str(result))
-        return f"<{self.tag}>{result}</{self.tag}>"
+        return f"<{self.tag}>{results}</{self.tag}>"

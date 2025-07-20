@@ -7,7 +7,7 @@ class TestHTMLNode(unittest.TestCase):
     def test_repr1(self):
         node = HTMLNode(tag="myTag", value="myValue")
         string = node.__repr__()
-        expected_string = f"""
+        expected_string = """
         -- HTML Node -- 
         Tag: myTag
         Value: myValue
@@ -123,8 +123,6 @@ class TestHTMLNode(unittest.TestCase):
             "<div><span><b>grandchild</b></span><h1>child</h1></div>",
         )
 
-    # TODO: finish below tests
-
     def test_to_html_with_child_no_value(self):
         child_node = LeafNode("p", None)
         parent_node = ParentNode("div", [child_node])
@@ -132,12 +130,11 @@ class TestHTMLNode(unittest.TestCase):
         self.assertIsInstance(result, ValueError)
         self.assertEqual(str(result), "LeafNode with no value")
 
-    def test_leaf_no_tag(self):
-        leaf = LeafNode(None, "My text")
-        self.assertEqual(leaf.to_html(), "My text")
+    def test_to_html_with_child_no_tag(self):
+        child_node = LeafNode(None, "My text")
+        parent_node = ParentNode("div", [child_node])
+        self.assertEqual(
+            parent_node.to_html(), 
+            "<div>My text</div>"
+        )
 
-    def test_leaf_no_value(self):
-        leaf = LeafNode("p", None)
-        result = leaf.to_html()
-        self.assertIsInstance(result, ValueError)
-        self.assertEqual(str(result), "LeafNode with no value")
