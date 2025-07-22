@@ -1,6 +1,15 @@
+from enum import Enum
 from htmlnode import LeafNode
 from textnode import TextNode, TextType
-from utils.extract import extract_markdown_links, extract_markdown_images
+from utils.regex import extract_markdown_links, extract_markdown_images, is_block_heading, is_block_code
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
 
 def text_node_to_html_node(text_node: TextNode) -> LeafNode:
     if text_node.text_type not in TextType:
@@ -145,4 +154,43 @@ def markdown_to_blocks(markdown: str):
         blocks.append(split)
 
     return blocks
+
+def is_block_quote(block: str) -> bool:
+    lines = block.splitlines()
+
+    for line in lines:
+        if not line.startswith(">"):
+            return False
+    return True
+
+def is_block_unordered_list(block: str) -> bool:
+    lines = block.splitlines()
+
+    for line in lines:
+        if not line.startswith("- "):
+            return False
+    return True
+
+def is_block_ordered_list(block: str) -> bool:
+    lines = block.splitlines()
+
+    list_num = 1
+    for line in lines:
+        if not line.startswith(f"{list_num}. "):
+            return False
+        list_num += 1
+    return True
+
+def block_to_block_type(block: str):
+    if is_block_heading(block):
+        return BlockType.HEADING
+    if is_block_code(block):
+        return BlockType.CODE
+    if is_block_quote(block):
+        return BlockType.QUOTE
+    if is_block_unordered_list(block):
+        return BlockType.UNORDERED_LIST
+    if is_block_ordered_list(block):
+        return BlockType.ORDERED_LIST
+    return BlockType.PARAGRAPH
         

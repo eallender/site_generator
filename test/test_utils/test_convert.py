@@ -1,5 +1,17 @@
 import unittest
-from utils.convert import text_node_to_html_node, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
+from utils.convert import (
+    text_node_to_html_node, 
+    split_nodes_delimiter, 
+    split_nodes_image, 
+    split_nodes_link, 
+    text_to_textnodes, 
+    markdown_to_blocks, 
+    is_block_quote, 
+    is_block_unordered_list,
+    is_block_ordered_list,
+    BlockType,
+    block_to_block_type,
+)
 from textnode import TextNode, TextType
 
 class TestConvertTextToHTML(unittest.TestCase):
@@ -356,3 +368,85 @@ This is the same paragraph on a new line
                 "- This is a list\n- with items",
             ],
         )
+
+class TestBlockToBlockType(unittest.TestCase):
+    def test_is_block_quote(self):
+        block = ">myquote"
+        result = is_block_quote(block)
+        self.assertEqual(result, True)
+
+    def test_is_block_quote_multiline(self):
+        block = ">quote line 1\n>quote line 2\n>quote line 3"
+        result = is_block_quote(block)
+        self.assertEqual(result, True)
+    
+    def test_is_block_quote_invalid1(self):
+        block = ">quote line 1\n>quote line 2\nquote line 3"
+        result = is_block_quote(block)
+        self.assertEqual(result, False)
+
+    def test_is_block_quote_invalid2(self):
+        block = "quote line 1"
+        result = is_block_quote(block)
+        self.assertEqual(result, False)
+
+    def test_is_block_unordered_list(self):
+        block = "- myquote"
+        result = is_block_unordered_list(block)
+        self.assertEqual(result, True)
+
+    def test_is_block_unordered_list_multiline(self):
+        block = "- unordered list line 1\n- unordered list line 2\n- unordered list line 3"
+        result = is_block_unordered_list(block)
+        self.assertEqual(result, True)
+
+    def test_is_block_unordered_list_invalid1(self):
+        block = "- unordered list line 1\n- unordered list line 2\n-unordered list line 3"
+        result = is_block_unordered_list(block)
+        self.assertEqual(result, False)
+
+    def test_is_block_unordered_list_invalid2(self):
+        block = "unordered list line 1"
+        result = is_block_unordered_list(block)
+        self.assertEqual(result, False)
+
+    def test_is_block_ordered_list(self):
+        block = "1. item 1"
+        result = is_block_ordered_list(block)
+        self.assertEqual(result, True)
+
+    def test_is_block_ordered_list_multiline(self):
+        block = "1. item 1\n2. item 2\n3. item3"
+        result = is_block_ordered_list(block)
+        self.assertEqual(result, True)
+
+    def test_is_block_ordered_list_invalid1(self):
+        block = "1. unordered list line 1\n2.unordered list line 2\n3. unordered list line 3"
+        result = is_block_ordered_list(block)
+        self.assertEqual(result, False)
+
+    def test_is_block_ordered_list_invalid2(self):
+        block = "1.ordered list line 1"
+        result = is_block_unordered_list(block)
+        self.assertEqual(result, False)
+
+    def test_block_to_block_type(self):
+        blocks = [
+            ">myquote",
+            "- mylist",
+            "```my code = 'test code'```",
+            "#### Heading 4",
+            "1. item",
+            "my paragraph"
+        ]
+        types = [
+            BlockType.QUOTE,
+            BlockType.UNORDERED_LIST,
+            BlockType.CODE,
+            BlockType.HEADING,
+            BlockType.ORDERED_LIST,
+            BlockType.PARAGRAPH
+        ]
+        for block, type in zip(blocks, types):
+            result = block_to_block_type(block)
+            self.assertEqual(result, type)
