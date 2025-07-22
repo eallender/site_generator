@@ -1,7 +1,6 @@
 from htmlnode import LeafNode
 from textnode import TextNode, TextType
 from utils.extract import extract_markdown_links, extract_markdown_images
-import pdb
 
 def text_node_to_html_node(text_node: TextNode) -> LeafNode:
     if text_node.text_type not in TextType:
@@ -120,3 +119,16 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
             new_nodes = working_list
 
     return new_nodes
+
+def text_to_textnodes(text: str) -> list[TextNode]:
+    nodes = [TextNode(text, TextType.TEXT)]
+    text_delims = ["**", "_", "`"]
+    text_types = [TextType.BOLD, TextType.ITALIC, TextType.CODE]
+
+    for delim,type in zip(text_delims, text_types):
+        nodes = split_nodes_delimiter(nodes, delim, type)
+
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+
+    return nodes
