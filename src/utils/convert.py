@@ -1,5 +1,7 @@
 from htmlnode import LeafNode
 from textnode import TextNode, TextType
+from utils.extract import extract_markdown_links, extract_markdown_images
+import pdb
 
 def text_node_to_html_node(text_node: TextNode) -> LeafNode:
     if text_node.text_type not in TextType:
@@ -47,5 +49,74 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
             if node.text:
                 new_node = TextNode(node.text, node.text_type)
                 new_nodes.append(new_node)
+
+    return new_nodes
+
+
+def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type not in TextType:
+            new_nodes.append(node)
+            continue
+
+        matches = extract_markdown_images(node.text)
+
+        new_nodes = old_nodes.copy()
+        for match in matches:
+            delim = f"![{match[0]}]({match[1]})"
+            working_list = []
+            for curr_node in new_nodes:
+                hasRun = False
+                while len(curr_node.text.split(delim, maxsplit=1)) > 1:
+                    hasRun = True
+                    split_node = curr_node.text.split(delim, maxsplit=1)
+                    curr_node.text = split_node[1]
+                    if split_node[0]:
+                        new_node = TextNode(split_node[0], node.text_type)
+                        working_list.append(new_node)
+                    new_node = TextNode(match[0], TextType.IMAGE, match[1])
+                    working_list.append(new_node)
+                if curr_node.text:
+                    if hasRun:
+                        new_node = TextNode(curr_node.text, node.text_type)
+                        working_list.append(new_node)
+                    else:
+                        working_list.append(curr_node)
+            new_nodes = working_list
+
+    return new_nodes
+
+def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type not in TextType:
+            new_nodes.append(node)
+            continue
+
+        matches = extract_markdown_links(node.text)
+
+        new_nodes = old_nodes.copy()
+        for match in matches:
+            delim = f"[{match[0]}]({match[1]})"
+            working_list = []
+            for curr_node in new_nodes:
+                hasRun = False
+                while len(curr_node.text.split(delim, maxsplit=1)) > 1:
+                    hasRun = True
+                    split_node = curr_node.text.split(delim, maxsplit=1)
+                    curr_node.text = split_node[1]
+                    if split_node[0]:
+                        new_node = TextNode(split_node[0], node.text_type)
+                        working_list.append(new_node)
+                    new_node = TextNode(match[0], TextType.LINK, match[1])
+                    working_list.append(new_node)
+                if curr_node.text:
+                    if hasRun:
+                        new_node = TextNode(curr_node.text, node.text_type)
+                        working_list.append(new_node)
+                    else:
+                        working_list.append(curr_node)
+            new_nodes = working_list
 
     return new_nodes
