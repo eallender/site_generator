@@ -1,7 +1,7 @@
 from enum import Enum
-from htmlnode import LeafNode
+from htmlnode import LeafNode, HTMLNode, ParentNode
 from textnode import TextNode, TextType
-from utils.regex import extract_markdown_links, extract_markdown_images, is_block_heading, is_block_code
+from utils.regex import extract_markdown_links, extract_markdown_images, is_block_heading, is_block_code, get_heading, remove_ordered_list_prefix
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -193,4 +193,92 @@ def block_to_block_type(block: str):
     if is_block_ordered_list(block):
         return BlockType.ORDERED_LIST
     return BlockType.PARAGRAPH
+
+def get_text_from_block(block: str, block_type: BlockType) -> str:
+    match block_type:
+        case BlockType.HEADING:
+            heading = get_heading(block)
+            return block.replace(heading, "").lstrip("\n")
+        case BlockType.CODE:
+            return block.replace("```", "").lstrip("\n")
+        case BlockType.QUOTE:
+            lines = block.splitlines()
+            text = []
+            for line in lines:
+                text.append(line.lstrip("> "))
+            return " ".join(text)
+        case BlockType.UNORDERED_LIST:
+            lines = block.splitlines()
+            text = []
+            for line in lines:
+                text.append(line.lstrip("- "))
+            return "\n".join(text)
+        case BlockType.ORDERED_LIST:
+            lines = block.splitlines()
+            text = []
+            for line in lines:
+                text.append(remove_ordered_list_prefix(line))
+            return "\n".join(text)
+        case BlockType.PARAGRAPH:
+            return block.replace("\n", " ")
+        case _:
+            raise Exception("Invalid block type received.")
+
+def text_to_children(text: str) -> list[LeafNode]:
+    children = []
+    text_nodes = text_to_textnodes(text)
+    for node in text_nodes:
+        children.append(text_node_to_html_node(node))
+    
+    return children
+
+def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
+    match block_type:
+        case BlockType.HEADING:
+            heading = get_heading(block)
+            text = get_text_from_block(block, block_type)
+            children = text_to_children(text)
+            return ParentNode(f"h{len(heading) - 1}", children)
+        case BlockType.CODE:
+            text = get_text_from_block(block, block_type)
+            code_text_block = TextNode(text, TextType.CODE)
+            html_node = text_node_to_html_node(code_text_block)
+            return ParentNode("pre", [html_node])
+        case BlockType.QUOTE:
+            text = get_text_from_block(block, block_type)
+            children = text_to_children(text)
+            return ParentNode("blockquote", children)
+        case BlockType.UNORDERED_LIST:
+            text = get_text_from_block(block, block_type)
+            children = []
+            for line in text.splitlines():
+                child = text_to_children(line)
+                children.append(ParentNode("li", child))
+            return ParentNode("ul", children)
+        case BlockType.ORDERED_LIST:
+            text = get_text_from_block(block, block_type)
+            children = []
+            for line in text.splitlines():
+                child = text_to_children(line)
+                children.append(ParentNode("li", child))
+            return ParentNode("ol", children)
+        case BlockType.PARAGRAPH:
+            text = get_text_from_block(block, block_type)
+            children = text_to_children(text)
+            return ParentNode("p", children)
+        case _:
+            raise Exception("Invalid block type received.")
+    
+    return 
+
+def markdown_to_html_node(markdown: str):
+    blocks = markdown_to_blocks(markdown)
+    
+    children = []
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        html_node_block = block_to_html_node(block, block_type)
+        children.append(html_node_block)
+
+    return ParentNode("div", children)
         

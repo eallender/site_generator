@@ -1,5 +1,5 @@
 import unittest
-from utils.regex import extract_markdown_images, extract_markdown_links, is_block_heading, is_block_code
+from utils.regex import extract_markdown_images, extract_markdown_links, is_block_heading, is_block_code, get_heading
 
 class TestExtract(unittest.TestCase):
     def test_extract_markdown_image(self):
@@ -92,3 +92,29 @@ class TestIsBlockCode(unittest.TestCase):
         block = "```my code = 'test code'\nmy_var2 = 123``"
         result = is_block_code(block)
         self.assertEqual(result, False)
+
+class TestHeadingNumber(unittest.TestCase):
+    def test_heading_1(self):
+        block = "# Heading 1"
+        heading_num = get_heading(block)
+        self.assertEqual(heading_num, "# ")
+
+    def test_heading_3(self):
+        block = "### Heading 3"
+        heading_num = get_heading(block)
+        self.assertEqual(heading_num, "### ")
+
+    def test_heading_6(self):
+        block = "###### Heading 6"
+        heading_num = get_heading(block)
+        self.assertEqual(heading_num, "###### ")
+
+    def test_heading_6_invalid(self):
+        block = "######Heading 6"
+        heading_num = get_heading(block)
+        self.assertEqual(heading_num, None)
+
+    def test_heading_7_invalid(self):
+        block = "####### Heading 7"
+        heading_num = get_heading(block)
+        self.assertEqual(heading_num, None)

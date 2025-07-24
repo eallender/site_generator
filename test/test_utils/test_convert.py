@@ -11,8 +11,11 @@ from utils.convert import (
     is_block_ordered_list,
     BlockType,
     block_to_block_type,
+    block_to_html_node,
+    markdown_to_html_node
 )
 from textnode import TextNode, TextType
+from htmlnode import ParentNode, LeafNode
 
 class TestConvertTextToHTML(unittest.TestCase):
     def test_text(self):
@@ -450,3 +453,104 @@ class TestBlockToBlockType(unittest.TestCase):
         for block, type in zip(blocks, types):
             result = block_to_block_type(block)
             self.assertEqual(result, type)
+
+class TestBlockToHtmlNode(unittest.TestCase):
+    def test_paragraphs(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with _italic_ text and `code` here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        )
+
+    def test_codeblock(self):
+        md = """
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+        )
+
+    def test_quote_block(self):
+        md = """
+> This is a quote
+> with multiple lines
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><blockquote>This is a quote with multiple lines</blockquote></div>",
+        )
+
+    def test_unordered_list(self):
+        md = """
+- This is a list item
+- Another item
+    """
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>This is a list item</li><li>Another item</li></ul></div>",
+        )
+
+    def test_ordered_list(self):
+        md = """
+1. First item
+2. Second item
+3. Third item
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>First item</li><li>Second item</li><li>Third item</li></ol></div>",
+        )
+
+    def test_all_block_types(self):
+        md = """
+# My Great Document
+
+This is a **paragraph** with _some_ `inline code`.
+
+## Subheading
+
+> This is a quote block.
+> It can have multiple lines.
+
+```
+print("This is code!")
+another_line = 42
+```
+
+- Unordered list item one
+- Unordered list item two
+
+1. Ordered list item one
+2. Ordered list item two
+
+Another paragraph at the end.
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>My Great Document</h1><p>This is a <b>paragraph</b> with <i>some</i> <code>inline code</code>.</p><h2>Subheading</h2><blockquote>This is a quote block. It can have multiple lines.</blockquote><pre><code>print(\"This is code!\")\nanother_line = 42\n</code></pre><ul><li>Unordered list item one</li><li>Unordered list item two</li></ul><ol><li>Ordered list item one</li><li>Ordered list item two</li></ol><p>Another paragraph at the end.</p></div>",
+        )

@@ -22,5 +22,14 @@ def is_block_code(block: str) -> bool:
             return True
     return False
 
+def get_heading(block: str) -> str | None:
+    match = re.match(r"^(#{1,6}\s)", block)
+    if match:
+        return match.group(1)
+    return None
+
+def remove_ordered_list_prefix(line: str) -> str:
+    return re.sub(r"^\d+\.\s+", "", line)
+
 
 
