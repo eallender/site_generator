@@ -12,6 +12,17 @@ class BlockType(Enum):
     ORDERED_LIST = "ordered_list"
 
 def text_node_to_html_node(text_node: TextNode) -> LeafNode:
+    """Converts a text node object into a LeafNode object
+
+    Args:
+        text_node (TextNode): The TextNode to convert
+
+    Raises:
+        Exception: Invalid text type received for given TextNode
+
+    Returns:
+        LeafNode: The new LeafNode created from the TextNode
+    """
     if text_node.text_type not in TextType:
         raise Exception(f"Invalid text type received: {text_node.text_type}")
     
@@ -30,6 +41,19 @@ def text_node_to_html_node(text_node: TextNode) -> LeafNode:
             return LeafNode("img", "", props={"src": text_node.url, "alt": text_node.text})
         
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
+    """Splits each TextNode based on the delimiter passed to the function
+
+    Args:
+        old_nodes (list[TextNode]): The list of TextNodes to be split
+        delimiter (str): The delimiter that should be used to split the nodes
+        text_type (TextType): The text types that new split nodes should become
+
+    Raises:
+        Exception: A text node was missing a matching delimiter
+
+    Returns:
+        list[TextNode]: The new list of TextNodes after splitting based on the delimiter
+    """
     new_nodes = []
 
     for node in old_nodes:
@@ -62,6 +86,14 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
 
 
 def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
+    """Splits the TextNodes based on markdown images within the text
+
+    Args:
+        old_nodes (list[TextNode]): The list of old nodes that will be checked for images
+
+    Returns:
+        list[TextNode]: The resulting list of TextNodes after splitting out the images
+    """
     new_nodes = []
     for node in old_nodes:
         if node.text_type not in TextType:
@@ -96,6 +128,14 @@ def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
     return new_nodes
 
 def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
+    """Splits the TextNodes based on markdown links within the text
+
+    Args:
+        old_nodes (list[TextNode]): The list of old nodes that will be checked for links
+
+    Returns:
+        list[TextNode]: The resulting list of TextNodes after splitting out the links
+    """
     new_nodes = []
     for node in old_nodes:
         if node.text_type not in TextType:
@@ -130,6 +170,14 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
     return new_nodes
 
 def text_to_textnodes(text: str) -> list[TextNode]:
+    """Converts raw markdown text to TextNode objects
+
+    Args:
+        text (str): The raw markdown text to be converted
+
+    Returns:
+        list[TextNode]: The resulting list of TextNodes
+    """
     nodes = [TextNode(text, TextType.TEXT)]
     text_delims = ["**", "_", "`"]
     text_types = [TextType.BOLD, TextType.ITALIC, TextType.CODE]
@@ -142,7 +190,15 @@ def text_to_textnodes(text: str) -> list[TextNode]:
 
     return nodes
 
-def markdown_to_blocks(markdown: str):
+def markdown_to_blocks(markdown: str) -> list[str]:
+    """Converts markdown into corresponding blocks
+
+    Args:
+        markdown (str): The raw markdown to be split
+
+    Returns:
+        list[str]: The list containing the text for each markdown block
+    """
     blocks = []
     splits = markdown.split("\n\n")
 
@@ -156,6 +212,14 @@ def markdown_to_blocks(markdown: str):
     return blocks
 
 def is_block_quote(block: str) -> bool:
+    """Checks to see if a given block is a quote block
+
+    Args:
+        block (str): The block to be checked
+
+    Returns:
+        bool: True if it is a quote block
+    """
     lines = block.splitlines()
 
     for line in lines:
@@ -164,6 +228,14 @@ def is_block_quote(block: str) -> bool:
     return True
 
 def is_block_unordered_list(block: str) -> bool:
+    """Checks to see if a given block is an unordered list
+
+    Args:
+        block (str): The block to be checked
+
+    Returns:
+        bool: True if it is an unordered list
+    """
     lines = block.splitlines()
 
     for line in lines:
@@ -172,6 +244,14 @@ def is_block_unordered_list(block: str) -> bool:
     return True
 
 def is_block_ordered_list(block: str) -> bool:
+    """Checks to see if a given block is an ordered list
+
+    Args:
+        block (str): The block to be checked
+
+    Returns:
+        bool: True if it is an ordered list
+    """
     lines = block.splitlines()
 
     list_num = 1
@@ -181,7 +261,15 @@ def is_block_ordered_list(block: str) -> bool:
         list_num += 1
     return True
 
-def block_to_block_type(block: str):
+def block_to_block_type(block: str) -> BlockType:
+    """Gets the block type for the given block
+
+    Args:
+        block (str): The block to be checked
+
+    Returns:
+        BlockType: The type for the given block
+    """
     if is_block_heading(block):
         return BlockType.HEADING
     if is_block_code(block):
@@ -195,6 +283,18 @@ def block_to_block_type(block: str):
     return BlockType.PARAGRAPH
 
 def get_text_from_block(block: str, block_type: BlockType) -> str:
+    """Gets the raw text from a markdown block (removing the block format text)
+
+    Args:
+        block (str): The block containing the text
+        block_type (BlockType): The type of the corresponding block
+
+    Raises:
+        Exception: An invalid block type was received
+
+    Returns:
+        str: The raw text of the given block
+    """
     match block_type:
         case BlockType.HEADING:
             heading = get_heading(block)
@@ -225,6 +325,14 @@ def get_text_from_block(block: str, block_type: BlockType) -> str:
             raise Exception("Invalid block type received.")
 
 def text_to_children(text: str) -> list[LeafNode]:
+    """Gets the LeafNodes (children) for the given text
+
+    Args:
+        text (str): The raw text of a block (children of the block)
+
+    Returns:
+        list[LeafNode]: The LeafNodes for a block (its children)
+    """
     children = []
     text_nodes = text_to_textnodes(text)
     for node in text_nodes:
@@ -232,7 +340,19 @@ def text_to_children(text: str) -> list[LeafNode]:
     
     return children
 
-def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
+def block_to_html_node(block: str, block_type: BlockType) -> ParentNode:
+    """Converts a markdown block to an HTMLNode (ParentNode)
+
+    Args:
+        block (str): A markdown block
+        block_type (BlockType): The corresponding type for the given block
+
+    Raises:
+        Exception: An invalid block type was received
+
+    Returns:
+        ParentNode: The given block converted to a ParentNode
+    """
     match block_type:
         case BlockType.HEADING:
             heading = get_heading(block)
@@ -271,7 +391,15 @@ def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
     
     return 
 
-def markdown_to_html_node(markdown: str):
+def markdown_to_html_node(markdown: str) -> ParentNode:
+    """Converts raw markdown to HTML
+
+    Args:
+        markdown (str): The raw markdown to be converted
+
+    Returns:
+        ParentNode: The HTML for the given markdown text
+    """
     blocks = markdown_to_blocks(markdown)
     
     children = []
