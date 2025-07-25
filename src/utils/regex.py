@@ -79,5 +79,24 @@ def remove_ordered_list_prefix(line: str) -> str:
     """
     return re.sub(r"^\d+\.\s+", "", line)
 
+def extract_title(markdown: str) -> str:
+    """Extracts the title from a markdown file (# Title)
+
+    Args:
+        markdown (str): The markdown text document
+
+    Raises:
+        Exception: Markdown file missing header
+
+    Returns:
+        str: Markdown title
+    """
+    for line in markdown.splitlines():
+        line = line.strip()
+        match = re.match(r"^# (.+)", line)
+        if match:
+            return match.group(1)
+        
+    raise Exception("Markdown file is missing header!")
 
 

@@ -1,5 +1,12 @@
 import unittest
-from utils.regex import extract_markdown_images, extract_markdown_links, is_block_heading, is_block_code, get_heading
+from utils.regex import (
+    extract_markdown_images, 
+    extract_markdown_links, 
+    is_block_heading, 
+    is_block_code, 
+    get_heading,
+    extract_title,
+)
 
 class TestExtract(unittest.TestCase):
     def test_extract_markdown_image(self):
@@ -118,3 +125,43 @@ class TestHeadingNumber(unittest.TestCase):
         block = "####### Heading 7"
         heading_num = get_heading(block)
         self.assertEqual(heading_num, None)
+
+class TestExtractTitle(unittest.TestCase):
+    def test_has_title(self):
+        block = """
+# My Document Title
+
+## Section 2
+
+My text document
+"""
+        title = extract_title(block)
+        self.assertEqual(title, "My Document Title")
+
+    def test_buried_title(self):
+        block = """
+My document introduction
+has multiple lines
+
+1. list item 1
+2. list item 2
+
+# My Document Title
+"""
+        title = extract_title(block)
+        self.assertEqual(title, "My Document Title")
+
+    def test_no_title(self):
+        block = """
+My document introduction
+has multiple lines
+
+1. list item 1
+2. list item 2
+
+"""
+        with self.assertRaises(Exception) as context:
+            extract_title(block)
+        
+        exception = context.exception
+        self.assertEqual(str(exception), "Markdown file is missing header!")

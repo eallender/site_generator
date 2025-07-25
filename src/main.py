@@ -1,18 +1,17 @@
-from textnode import TextNode, TextType
-from utils.convert import split_nodes_image
+import os
+from utils.site_gen import generate_public, generate_page
 
 def main():
-    node = TextNode("My test node", TextType.TEXT, "https://myurl:1234")
-    print(node)
-
-
-    ## TEST CODE TODO: REMOVE
-    node = TextNode(
-            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
-            TextType.TEXT,
-        )
-    new_nodes = split_nodes_image([node])
-    print(new_nodes)
+    if generate_public():
+        print("Successfully generated public")
+    else:
+        print("Failed to generate public")
+    main_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.dirname(main_dir)
+    markdown_path = os.path.join(project_dir, "content/index.md")
+    template_path = os.path.join(project_dir, "template.html")
+    index_path = os.path.join(project_dir, "public/index.html")
+    generate_page(markdown_path, template_path, index_path)
     
 if __name__ == "__main__":
     main()

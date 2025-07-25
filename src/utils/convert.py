@@ -407,6 +407,5 @@ def markdown_to_html_node(markdown: str) -> ParentNode:
         block_type = block_to_block_type(block)
         html_node_block = block_to_html_node(block, block_type)
         children.append(html_node_block)
-
     return ParentNode("div", children)
         
